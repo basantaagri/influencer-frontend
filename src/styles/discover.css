@@ -1,0 +1,30 @@
+/* DISCOVER PAGE */
+
+select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+select:focus {
+  outline: none;
+  border-color: #111;
+}
+
+/* AUDIT HOVER */
+
+.audit-hover-box {
+  display: none;
+}
+
+div:hover > .audit-hover-box {
+  display: block;
+}
+
+/* CARD FEEL */
+
+.card:hover {
+  transform: translateY(-2px);
+  transition: 0.2s ease;
+}
