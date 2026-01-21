@@ -1,27 +1,23 @@
-const API_BASE = "http://127.0.0.1:8000";
+// frontend/src/api/influencers.js
+// Influencer API — FINAL (apiFetch based)
+
+import { apiFetch } from "./client";
 
 // ----------------------------------
 // Fetch all influencers
 // ----------------------------------
-export async function fetchInfluencers() {
-  const res = await fetch(`${API_BASE}/influencers`);
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch influencers");
-  }
-
-  return res.json();
-}
+export const fetchInfluencers = async () => {
+  // NOTE: trailing slash is important (FastAPI redirect-safe)
+  return apiFetch("/influencers/");
+};
 
 // ----------------------------------
 // Fetch single influencer by ID
 // ----------------------------------
-export async function fetchInfluencerById(id) {
-  const res = await fetch(`${API_BASE}/influencers/${id}`);
-
-  if (!res.ok) {
-    throw new Error("Influencer not found");
+export const fetchInfluencerById = async (id) => {
+  if (!id) {
+    throw new Error("Influencer ID is required");
   }
 
-  return res.json();
-}
+  return apiFetch(`/influencers/${id}`);
+};
