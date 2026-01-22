@@ -103,17 +103,11 @@ function Discover() {
   useEffect(() => {
     setLoading(true);
 
-    fetchInfluencers({
-      page,
-      per_page: PER_PAGE,
-    })
+    fetchInfluencers({ page, per_page: PER_PAGE })
       .then((data) => {
         setInfluencers(Array.isArray(data) ? data : []);
       })
-      .catch((err) => {
-        console.error("Fetch influencers failed:", err);
-        setInfluencers([]);
-      })
+      .catch(() => setInfluencers([]))
       .finally(() => setLoading(false));
   }, [page]);
 
@@ -171,7 +165,7 @@ function Discover() {
     filtered.sort((a, b) => b.followers - a.followers);
 
   // --------------------------------------------------
-  // ✅ RENDER — FINAL SAFE VERSION
+  // ✅ FINAL SAFE RENDER
   // --------------------------------------------------
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "60px 20px" }}>
