@@ -105,36 +105,44 @@ function Discover() {
   };
 
   // --------------------------------------------------
-  // FETCH INFLUENCERS
+  // FETCH INFLUENCERS (SAFE)
   // --------------------------------------------------
   useEffect(() => {
     setLoading(true);
 
     fetchInfluencers(page, PER_PAGE)
       .then((data) => {
+        // ✅ GUARANTEED ARRAY
         setInfluencers(Array.isArray(data) ? data : []);
-        setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => {
+        console.error("Fetch influencers failed:", err);
+        setInfluencers([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [page]);
 
   // --------------------------------------------------
-  // NORMALIZE DATA
+  // NORMALIZE DATA (DEFENSIVE)
   // --------------------------------------------------
-  const normalized = influencers.map((inf) => ({
-    ...inf,
-    platform_normalized:
-      PLATFORM_MAP[inf.platform] || inf.platform,
-    niche_normalized:
-      NICHE_MAP[inf.niche] || inf.niche,
-    engagement_rate:
-      inf.engagement_rate ??
-      Math.round((inf.audit_score ?? 0) / 20),
-    price:
-      inf.price ??
-      inf.price_per_post ??
-      0,
-  }));
+  const normalized = Array.isArray(influencers)
+    ? influencers.map((inf) => ({
+        ...inf,
+        platform_normalized:
+          PLATFORM_MAP[inf.platform] || inf.platform,
+        niche_normalized:
+          NICHE_MAP[inf.niche] || inf.niche,
+        engagement_rate:
+          inf.engagement_rate ??
+          Math.round((inf.audit_score ?? 0) / 20),
+        price:
+          inf.price ??
+          inf.price_per_post ??
+          0,
+      }))
+    : [];
 
   // --------------------------------------------------
   // APPLY FILTERS
@@ -200,7 +208,7 @@ function Discover() {
   }
 
   // --------------------------------------------------
-  // RENDER
+  // RENDER (GUARANTEED SAFE)
   // --------------------------------------------------
   return (
     <div
@@ -241,11 +249,13 @@ function Discover() {
       </div>
 
       {loading && <p>Loading influencers…</p>}
+
       {!loading && filtered.length === 0 && (
         <p>No influencers found.</p>
       )}
 
       {!loading &&
+        filtered.length > 0 &&
         filtered.map((inf) => (
           <InfluencerCard
             key={inf.id}
@@ -283,7 +293,7 @@ function Discover() {
         </button>
       </div>
 
-      {/* COMPARE BAR — CONNECTED */}
+      {/* COMPARE BAR */}
       {compareList.length > 0 && (
         <div
           style={{
