@@ -98,12 +98,12 @@ function Discover() {
   };
 
   // --------------------------------------------------
-  // FETCH INFLUENCERS (OBJECT-BASED)
+  // ✅ FETCH INFLUENCERS (FIXED, SAFE)
   // --------------------------------------------------
   useEffect(() => {
     setLoading(true);
 
-    fetchInfluencers({ page, per_page: PER_PAGE })
+    fetchInfluencers(page, PER_PAGE)
       .then((data) => {
         setInfluencers(Array.isArray(data) ? data : []);
       })
@@ -165,7 +165,7 @@ function Discover() {
     filtered.sort((a, b) => b.followers - a.followers);
 
   // --------------------------------------------------
-  // ✅ FINAL SAFE RENDER
+  // RENDER
   // --------------------------------------------------
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "60px 20px" }}>
@@ -204,18 +204,15 @@ function Discover() {
         <p>No influencers found.</p>
       )}
 
-      {!loading && filtered.length > 0 && (
-        <>
-          {filtered.map((inf) => (
-            <InfluencerCard
-              key={inf.id}
-              influencer={inf}
-              selected={compareList.some((i) => i.id === inf.id)}
-              toggleCompare={toggleCompare}
-            />
-          ))}
-        </>
-      )}
+      {!loading &&
+        filtered.map((inf) => (
+          <InfluencerCard
+            key={inf.id}
+            influencer={inf}
+            selected={compareList.some((i) => i.id === inf.id)}
+            toggleCompare={toggleCompare}
+          />
+        ))}
 
       <div
         style={{
