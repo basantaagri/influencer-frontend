@@ -3,20 +3,22 @@ import { useNavigate } from "react-router-dom";
 import { fetchAudit } from "../api/audit";
 import AuditBadge from "./AuditBadge";
 import TrustBadge from "./TrustBadge";
-import {
-  isShortlisted,
-  toggleShortlist,
-} from "../utils/shortlist";
-import { createOrder } from "../utils/orders";
+
+// ❌ TEMP DISABLED (backend not enabled yet)
+// import {
+//   isShortlisted,
+//   toggleShortlist,
+// } from "../utils/shortlist";
+
+// import { createOrder } from "../utils/orders";
 
 function InfluencerCard({ influencer }) {
   const navigate = useNavigate();
 
   const [audit, setAudit] = useState(null);
-  const [saved, setSaved] = useState(false);
 
   // --------------------------------------------------
-  // FETCH AUDIT + SHORTLIST STATUS (SAFE)
+  // FETCH AUDIT ONLY (SAFE)
   // --------------------------------------------------
   useEffect(() => {
     if (!influencer?.id) return;
@@ -24,36 +26,23 @@ function InfluencerCard({ influencer }) {
     fetchAudit(influencer.id)
       .then(setAudit)
       .catch(() => setAudit(null));
-
-    isShortlisted(influencer.id)
-      .then(setSaved)
-      .catch(() => setSaved(false));
   }, [influencer.id]);
 
   // --------------------------------------------------
-  // SHORTLIST TOGGLE
+  // PLACEHOLDER ACTIONS (DISABLED)
   // --------------------------------------------------
-  const onToggleSave = async (e) => {
+  const onToggleSave = (e) => {
     e.stopPropagation();
-    const updated = await toggleShortlist(influencer.id);
-    setSaved(updated.includes(influencer.id));
+    // Coming soon
+  };
+
+  const onRequestCollab = (e) => {
+    e.stopPropagation();
+    alert("Coming soon");
   };
 
   // --------------------------------------------------
-  // CREATE ORDER
-  // --------------------------------------------------
-  const onRequestCollab = async (e) => {
-    e.stopPropagation();
-    await createOrder({
-      id: influencer.id,
-      name: influencer.username, // ✅ FIXED
-      price: influencer.price ?? 0,
-    });
-    alert("Collaboration request sent");
-  };
-
-  // --------------------------------------------------
-  // DECISION TEXT (RARE FEATURE)
+  // DECISION TEXT
   // --------------------------------------------------
   const decisionText =
     audit?.label === "Good"
@@ -114,16 +103,17 @@ function InfluencerCard({ influencer }) {
             )}
           </h3>
 
+          {/* ⭐ DISABLED SHORTLIST */}
           <button
             onClick={onToggleSave}
             style={{
               background: "transparent",
               border: "none",
               fontSize: 22,
-              cursor: "pointer",
-              color: saved ? "#f5b301" : "#ccc",
+              cursor: "not-allowed",
+              color: "#ccc",
             }}
-            aria-label="Save influencer"
+            aria-label="Save influencer (coming soon)"
           >
             ★
           </button>
@@ -133,7 +123,6 @@ function InfluencerCard({ influencer }) {
           {influencer.platform} • {influencer.niche}
         </p>
 
-        {/* OPTIONAL PROFILE URL */}
         {influencer.profile_url && (
           <a
             href={influencer.profile_url}
