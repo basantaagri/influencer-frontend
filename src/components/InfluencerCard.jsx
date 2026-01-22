@@ -19,6 +19,8 @@ function InfluencerCard({ influencer }) {
   // FETCH AUDIT + SHORTLIST STATUS (SAFE)
   // --------------------------------------------------
   useEffect(() => {
+    if (!influencer?.id) return;
+
     fetchAudit(influencer.id)
       .then(setAudit)
       .catch(() => setAudit(null));
@@ -44,8 +46,8 @@ function InfluencerCard({ influencer }) {
     e.stopPropagation();
     await createOrder({
       id: influencer.id,
-      name: influencer.name,
-      price: influencer.price ?? influencer.price_per_post ?? 0,
+      name: influencer.username, // ✅ FIXED
+      price: influencer.price ?? 0,
     });
     alert("Collaboration request sent");
   };
@@ -95,7 +97,7 @@ function InfluencerCard({ influencer }) {
           }}
         >
           <h3 style={{ margin: 0, display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {influencer.name}
+            @{influencer.username}
 
             {audit && (
               <AuditBadge
@@ -131,7 +133,7 @@ function InfluencerCard({ influencer }) {
           {influencer.platform} • {influencer.niche}
         </p>
 
-        {/* 🔗 CLICKABLE SOCIAL PROFILE (MANDATORY) */}
+        {/* OPTIONAL PROFILE URL */}
         {influencer.profile_url && (
           <a
             href={influencer.profile_url}
@@ -204,7 +206,7 @@ function InfluencerCard({ influencer }) {
         }}
       >
         <p style={{ fontSize: 20, fontWeight: 600 }}>
-          ₹{(influencer.price ?? influencer.price_per_post ?? 0).toLocaleString()}
+          ₹{(influencer.price ?? 0).toLocaleString()}
         </p>
 
         {audit && (
