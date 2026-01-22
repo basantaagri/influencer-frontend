@@ -4,7 +4,7 @@ import InfluencerCard from "../components/InfluencerCard";
 import Filters from "../components/Filters";
 
 // --------------------------------------------------
-// NORMALIZATION MAPS (SAFE, FRONTEND ONLY)
+// NORMALIZATION MAPS (FRONTEND ONLY)
 // --------------------------------------------------
 const NICHE_MAP = {
   Tech: "Technology",
@@ -27,10 +27,7 @@ const PLATFORM_MAP = {
 // ⭐ RECOMMENDED SCORE (AUDIT DISABLED — SAFE MODE)
 // --------------------------------------------------
 function recommendedScore(inf) {
-  let score = 0;
-
-  // Neutral audit weight (audit temporarily disabled)
-  score += 10;
+  let score = 10; // neutral base score
 
   // Engagement rate (0–30)
   const engagement = inf.engagement_rate ?? 0;
@@ -102,29 +99,24 @@ function Discover() {
   // --------------------------------------------------
   let filtered = [...normalized];
 
-  // Platform
   if (platform !== "All") {
     filtered = filtered.filter(
       (i) => i.platform_normalized === platform
     );
   }
 
-  // Niche
   if (niche !== "All") {
     filtered = filtered.filter(
       (i) => i.niche_normalized === niche
     );
   }
 
-  // Engagement
   if (engagement !== "All") {
     filtered = filtered.filter(
-      (i) =>
-        (i.engagement_rate ?? 0) >= Number(engagement)
+      (i) => (i.engagement_rate ?? 0) >= Number(engagement)
     );
   }
 
-  // Price
   if (price !== "All") {
     filtered = filtered.filter((i) => {
       if (price === "10000") return i.price < 10000;
@@ -142,8 +134,7 @@ function Discover() {
   // --------------------------------------------------
   if (sortBy === "recommended") {
     filtered.sort(
-      (a, b) =>
-        recommendedScore(b) - recommendedScore(a)
+      (a, b) => recommendedScore(b) - recommendedScore(a)
     );
   }
 
