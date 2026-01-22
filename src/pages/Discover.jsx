@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { fetchInfluencers } from "../api/influencers";
 import InfluencerCard from "../components/InfluencerCard";
 import Filters from "../components/Filters";
@@ -24,22 +25,19 @@ const PLATFORM_MAP = {
 };
 
 // --------------------------------------------------
-// ⭐ RECOMMENDED SCORE (AUDIT DISABLED — SAFE MODE)
+// ⭐ RECOMMENDED SCORE (SAFE MODE)
 // --------------------------------------------------
 function recommendedScore(inf) {
-  let score = 10; // neutral base score
+  let score = 10;
 
-  // Engagement rate (0–30)
   const engagement = inf.engagement_rate ?? 0;
   score += Math.min(engagement * 10, 30);
 
-  // Avg views sanity (0–20)
   const views = inf.avg_views ?? 0;
   if (views > 10000) score += 20;
   else if (views > 5000) score += 12;
   else if (views > 1000) score += 6;
 
-  // Price penalty (0 to -10)
   const price = inf.price ?? 0;
   if (price > 50000) score -= 10;
   else if (price > 25000) score -= 5;
@@ -48,6 +46,8 @@ function recommendedScore(inf) {
 }
 
 function Discover() {
+  const navigate = useNavigate();
+
   // --------------------------------------------------
   // CORE DATA
   // --------------------------------------------------
@@ -55,26 +55,68 @@ function Discover() {
   const [loading, setLoading] = useState(true);
 
   // --------------------------------------------------
+  // PAGINATION
+  // --------------------------------------------------
+  const [page, setPage] = useState(1);
+  const PER_PAGE = 10;
+
+  // --------------------------------------------------
   // FILTER STATES
   // --------------------------------------------------
   const [platform, setPlatform] = useState("All");
   const [niche, setNiche] = useState("All");
   const [engagement, setEngagement] = useState("All");
-  const [audit, setAudit] = useState("All"); // kept for UI compatibility
+  const [audit, setAudit] = useState("All");
   const [price, setPrice] = useState("All");
   const [sortBy, setSortBy] = useState("recommended");
+
+  // --------------------------------------------------
+  // COMPARE (PERSISTED — FINAL)
+  // --------------------------------------------------
+  const [compareList, setCompareList] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("compare_items")) || [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(
+      "compare_items",
+      JSON.stringify(compareList)
+    );
+  }, [compareList]);
+
+  const toggleCompare = (influencer) => {
+    setCompareList((prev) => {
+      const exists = prev.find((i) => i.id === influencer.id);
+      if (exists) {
+        return prev.filter((i) => i.id !== influencer.id);
+      }
+
+      if (prev.length >= 3) {
+        alert("You can compare maximum 3 influencers");
+        return prev;
+      }
+
+      return [...prev, influencer];
+    });
+  };
 
   // --------------------------------------------------
   // FETCH INFLUENCERS
   // --------------------------------------------------
   useEffect(() => {
-    fetchInfluencers()
+    setLoading(true);
+
+    fetchInfluencers(page, PER_PAGE)
       .then((data) => {
         setInfluencers(Array.isArray(data) ? data : []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }, [page]);
 
   // --------------------------------------------------
   // NORMALIZE DATA
@@ -173,20 +215,30 @@ function Discover() {
         Brand protection + decision intelligence
       </p>
 
-      <Filters
-        platform={platform}
-        setPlatform={setPlatform}
-        niche={niche}
-        setNiche={setNiche}
-        engagement={engagement}
-        setEngagement={setEngagement}
-        audit={audit}
-        setAudit={setAudit}
-        price={price}
-        setPrice={setPrice}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
-      />
+      {/* FILTERS */}
+      <div
+        style={{
+          padding: 20,
+          borderRadius: 16,
+          background: "#fafafa",
+          marginBottom: 30,
+        }}
+      >
+        <Filters
+          platform={platform}
+          setPlatform={setPlatform}
+          niche={niche}
+          setNiche={setNiche}
+          engagement={engagement}
+          setEngagement={setEngagement}
+          audit={audit}
+          setAudit={setAudit}
+          price={price}
+          setPrice={setPrice}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+        />
+      </div>
 
       {loading && <p>Loading influencers…</p>}
       {!loading && filtered.length === 0 && (
@@ -198,8 +250,72 @@ function Discover() {
           <InfluencerCard
             key={inf.id}
             influencer={inf}
+            selected={compareList.some(
+              (i) => i.id === inf.id
+            )}
+            toggleCompare={toggleCompare}
           />
         ))}
+
+      {/* PAGINATION */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          gap: 12,
+          marginTop: 30,
+        }}
+      >
+        <button
+          disabled={page === 1}
+          onClick={() => setPage((p) => p - 1)}
+        >
+          ← Prev
+        </button>
+
+        <span style={{ paddingTop: 6 }}>Page {page}</span>
+
+        <button
+          disabled={influencers.length < PER_PAGE}
+          onClick={() => setPage((p) => p + 1)}
+        >
+          Next →
+        </button>
+      </div>
+
+      {/* COMPARE BAR — CONNECTED */}
+      {compareList.length > 0 && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 20,
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "#111",
+            color: "#fff",
+            padding: "12px 20px",
+            borderRadius: 14,
+            display: "flex",
+            gap: 14,
+            alignItems: "center",
+            zIndex: 999,
+          }}
+        >
+          <span>{compareList.length} selected</span>
+
+          <button
+            onClick={() => navigate("/compare")}
+            style={{
+              padding: "6px 14px",
+              borderRadius: 8,
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            Compare
+          </button>
+        </div>
+      )}
     </div>
   );
 }

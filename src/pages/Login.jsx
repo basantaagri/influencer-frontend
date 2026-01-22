@@ -5,12 +5,17 @@ import { apiFetch } from "../api/client";
 function Login() {
   const navigate = useNavigate();
 
-  // ✅ NEW: Auto-redirect if already logged in (SAFE)
+  // --------------------------------------------------
+  // AUTO REDIRECT IF ALREADY LOGGED IN (SAFE)
+  // --------------------------------------------------
   useEffect(() => {
-    const token = localStorage.getItem("auth_token") || localStorage.getItem("access_token");
+    const token =
+      localStorage.getItem("access_token") ||
+      localStorage.getItem("auth_token");
+
     const role = localStorage.getItem("auth_role");
 
-    if (token && role) {
+    if (token) {
       if (role === "brand") {
         navigate("/orders", { replace: true });
       } else if (role === "influencer") {
@@ -21,10 +26,16 @@ function Login() {
     }
   }, [navigate]);
 
+  // --------------------------------------------------
+  // FORM STATE
+  // --------------------------------------------------
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  // --------------------------------------------------
+  // LOGIN HANDLER (UNCHANGED LOGIC)
+  // --------------------------------------------------
   const onSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -35,11 +46,12 @@ function Login() {
         body: JSON.stringify({ email, password }),
       });
 
-      // ✅ Persist auth
+      // ✅ STORE TOKEN IN BOTH KEYS (COMPAT SAFE)
+      localStorage.setItem("access_token", res.access_token);
       localStorage.setItem("auth_token", res.access_token);
-      localStorage.setItem("auth_role", res.role);
+      localStorage.setItem("auth_role", res.role || "brand");
 
-      // ✅ Role-based redirect
+      // ✅ ROLE-BASED REDIRECT
       if (res.role === "brand") {
         navigate("/orders", { replace: true });
       } else if (res.role === "influencer") {
@@ -47,11 +59,14 @@ function Login() {
       } else {
         navigate("/", { replace: true });
       }
-    } catch {
+    } catch (err) {
       setError("Invalid credentials");
     }
   };
 
+  // --------------------------------------------------
+  // UI
+  // --------------------------------------------------
   return (
     <div
       style={{
@@ -98,6 +113,9 @@ function Login() {
   );
 }
 
+// --------------------------------------------------
+// STYLES (UNCHANGED)
+// --------------------------------------------------
 const inputStyle = {
   width: "100%",
   padding: "12px 14px",

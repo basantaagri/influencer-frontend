@@ -1,39 +1,37 @@
 import { apiFetch } from "./client";
 
-const API_BASE = "http://127.0.0.1:8002/orders";
-
 // ----------------------------------
 // Get all orders (AUTH SAFE)
 // ----------------------------------
-export async function fetchOrders() {
-  return apiFetch(API_BASE);
-}
+export const fetchOrders = async () => {
+  return apiFetch("/orders");
+};
 
 // ----------------------------------
-// Create order (AUTH SAFE)
+// Create order
 // ----------------------------------
-export async function createOrderAPI(order) {
-  return apiFetch(API_BASE, {
+export const createOrderAPI = async (order) => {
+  return apiFetch("/orders", {
     method: "POST",
     body: JSON.stringify(order),
   });
-}
+};
 
 // ----------------------------------
-// Update order status (AUTH SAFE)
+// Update order status
 // ----------------------------------
-export async function updateOrderStatusAPI(id, status) {
-  return apiFetch(`${API_BASE}/${id}`, {
+export const updateOrderStatusAPI = async (id, status) => {
+  return apiFetch(`/orders/${id}`, {
     method: "PATCH",
     body: JSON.stringify({ status }),
   });
-}
+};
 
 // ----------------------------------
-// Delete order (AUTH SAFE)
+// Delete order
 // ----------------------------------
-export async function deleteOrderAPI(id) {
-  return apiFetch(`${API_BASE}/${id}`, {
+export const deleteOrderAPI = async (id) => {
+  return apiFetch(`/orders/${id}`, {
     method: "DELETE",
   });
-}
+};

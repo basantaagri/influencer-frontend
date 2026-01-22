@@ -1,4 +1,5 @@
-export async function getHealth() {
-  const response = await fetch("http://127.0.0.1:8002/health");
-  return response.json();
-}
+import { apiFetch } from "./client";
+
+export const getHealth = async () => {
+  return apiFetch("/health");
+};

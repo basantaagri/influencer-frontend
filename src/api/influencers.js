@@ -5,10 +5,17 @@ import { apiFetch } from "./client";
 
 // ----------------------------------
 // Fetch all influencers
+// (Pagination supported, backward-compatible)
 // ----------------------------------
-export const fetchInfluencers = async () => {
-  // NOTE: trailing slash is important (FastAPI redirect-safe)
-  return apiFetch("/influencers/");
+export const fetchInfluencers = async (
+  page = 1,
+  perPage = 10
+) => {
+  // If caller does not care about pagination,
+  // defaults will be used and nothing breaks
+  return apiFetch(
+    `/influencers/?page=${page}&per_page=${perPage}`
+  );
 };
 
 // ----------------------------------
@@ -20,4 +27,17 @@ export const fetchInfluencerById = async (id) => {
   }
 
   return apiFetch(`/influencers/${id}`);
+};
+
+// ----------------------------------
+// Reveal influencer (JWT PROTECTED)
+// ----------------------------------
+export const revealInfluencer = async (id) => {
+  if (!id) {
+    throw new Error("Influencer ID is required");
+  }
+
+  return apiFetch(`/reveal/${id}`, {
+    method: "POST",
+  });
 };

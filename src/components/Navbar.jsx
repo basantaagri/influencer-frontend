@@ -1,134 +1,177 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getOrders } from "../utils/orders";
-import { logout } from "../utils/auth"; // ✅ NEW (SAFE)
+import { fetchCredits } from "../api/credits";
 
 function Navbar() {
   const location = useLocation();
-  const navigate = useNavigate(); // ✅ NEW
-  const role = localStorage.getItem("auth_role");
-  const [pendingCount, setPendingCount] = useState(0);
+  const navigate = useNavigate();
+
+  const [credits, setCredits] = useState(null);
+  const [compareCount, setCompareCount] = useState(0);
 
   // ----------------------------------
-  // Load pending orders (influencer only)
+  // SCROLL TO TOP ON DISCOVER
   // ----------------------------------
-  useEffect(() => {
-    if (role === "influencer") {
-      getOrders()
-        .then((orders) => {
-          const pending = Array.isArray(orders)
-            ? orders.filter((o) => o.status === "pending")
-            : [];
-          setPendingCount(pending.length);
-        })
-        .catch(() => {
-          setPendingCount(0);
-        });
-    } else {
-      setPendingCount(0);
+  const handleDiscoverClick = () => {
+    if (location.pathname === "/") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  }, [role]);
-
-  // ----------------------------------
-  // LOGOUT HANDLER (SAFE)
-  // ----------------------------------
-  const onLogout = () => {
-    logout();
-    navigate("/login", { replace: true });
-    window.location.reload();
   };
 
-  const linkStyle = (path) => ({
-    textDecoration: "none",
-    fontSize: 15,
-    fontWeight: 500,
-    color: location.pathname === path ? "#000" : "#6e6e73",
-    position: "relative",
-    cursor: "pointer",
-  });
+  // ----------------------------------
+  // FETCH CREDITS (JWT PROTECTED)
+  // ----------------------------------
+  useEffect(() => {
+    fetchCredits()
+      .then((res) => setCredits(res.credits))
+      .catch(() => setCredits(null));
+  }, []);
+
+  // ----------------------------------
+  // LISTEN FOR CREDIT UPDATES
+  // ----------------------------------
+  useEffect(() => {
+    const refreshCredits = () => {
+      fetchCredits()
+        .then((res) => setCredits(res.credits))
+        .catch(() => setCredits(null));
+    };
+
+    window.addEventListener("credits:update", refreshCredits);
+    return () =>
+      window.removeEventListener("credits:update", refreshCredits);
+  }, []);
+
+  // ----------------------------------
+  // LOAD + LISTEN COMPARE COUNT (SAFE)
+  // ----------------------------------
+  useEffect(() => {
+    const loadCompareCount = () => {
+      try {
+        const items = JSON.parse(
+          localStorage.getItem("compare_items") || "[]"
+        );
+        setCompareCount(Array.isArray(items) ? items.length : 0);
+      } catch {
+        setCompareCount(0);
+      }
+    };
+
+    loadCompareCount();
+
+    window.addEventListener("storage", loadCompareCount);
+    window.addEventListener("compare:update", loadCompareCount);
+
+    return () => {
+      window.removeEventListener("storage", loadCompareCount);
+      window.removeEventListener("compare:update", loadCompareCount);
+    };
+  }, []);
 
   return (
-    <div
+    <nav
       style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 10,
-        background: "#fff",
+        padding: "14px 28px",
         borderBottom: "1px solid #eee",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
       }}
     >
-      <div
-        style={{
-          maxWidth: 1100,
-          margin: "0 auto",
-          padding: "16px 20px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <strong style={{ fontSize: 16 }}>Influencer</strong>
+      {/* LEFT SIDE */}
+      <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+        {/* LOGO */}
+        <Link
+          to="/"
+          onClick={handleDiscoverClick}
+          style={{
+            fontWeight: 600,
+            textDecoration: "none",
+            color: "#111",
+            fontSize: 18,
+          }}
+        >
+          BookMyInfluencers
+        </Link>
 
-        <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
-          <Link to="/" style={linkStyle("/")}>
-            Discover
-          </Link>
+        {/* DISCOVER */}
+        <Link to="/" onClick={handleDiscoverClick} style={linkStyle}>
+          Discover
+        </Link>
 
-          {/* BRAND NAV */}
-          {role === "brand" && (
-            <>
-              <Link to="/saved" style={linkStyle("/saved")}>
-                Saved
-              </Link>
+        {/* SAVED */}
+        <Link to="/saved" style={linkStyle}>
+          Saved
+        </Link>
 
-              <Link to="/orders" style={linkStyle("/orders")}>
-                Orders
-              </Link>
-            </>
-          )}
+        {/* ORDERS */}
+        <Link to="/orders" style={linkStyle}>
+          Orders
+        </Link>
 
-          {/* INFLUENCER NAV */}
-          {role === "influencer" && (
-            <Link to="/influencer" style={linkStyle("/influencer")}>
-              Influencer Dashboard
-              {pendingCount > 0 && (
-                <span
-                  style={{
-                    position: "absolute",
-                    top: -6,
-                    right: -14,
-                    background: "#e11d48",
-                    color: "#fff",
-                    fontSize: 11,
-                    padding: "2px 6px",
-                    borderRadius: 10,
-                    lineHeight: 1,
-                  }}
-                >
-                  {pendingCount}
-                </span>
-              )}
-            </Link>
-          )}
-
-          {/* ✅ LOGOUT (ONLY WHEN LOGGED IN) */}
-          {role && (
+        {/* COMPARE */}
+        <button
+          onClick={() => navigate("/compare")}
+          style={{
+            ...linkStyle,
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          Compare
+          {compareCount > 0 && (
             <span
-              onClick={onLogout}
               style={{
-                fontSize: 14,
-                fontWeight: 500,
-                color: "#e11d48",
-                cursor: "pointer",
+                background: "#111",
+                color: "#fff",
+                fontSize: 11,
+                padding: "2px 6px",
+                borderRadius: 999,
+                fontWeight: 600,
               }}
             >
-              Logout
+              {compareCount}
             </span>
           )}
-        </div>
+        </button>
+
+        {/* AUTH */}
+        <Link to="/login" style={linkStyle}>
+          Login
+        </Link>
+
+        <Link to="/signup" style={linkStyle}>
+          Signup
+        </Link>
       </div>
-    </div>
+
+      {/* RIGHT SIDE — CREDITS */}
+      {credits !== null && (
+        <div
+          style={{
+            padding: "6px 14px",
+            borderRadius: 20,
+            background: "#111",
+            color: "#fff",
+            fontSize: 13,
+            fontWeight: 500,
+          }}
+        >
+          Credits: {credits}
+        </div>
+      )}
+    </nav>
   );
 }
+
+const linkStyle = {
+  textDecoration: "none",
+  color: "#333",
+  fontSize: 15,
+};
 
 export default Navbar;

@@ -1,28 +1,23 @@
-// frontend/src/api/client.js
-// API client — FINAL (LOCAL + PROD SAFE)
+const BASE_URL = import.meta.env.VITE_API_BASE;
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE ||
-  "http://127.0.0.1:8000";
+if (!BASE_URL) {
+  throw new Error("VITE_API_BASE is not defined");
+}
 
-export const apiFetch = async (endpoint, options = {}) => {
-  try {
-    const response = await fetch(`${API_BASE}${endpoint}`, {
-      headers: {
-        "Content-Type": "application/json",
-        ...(options.headers || {}),
-      },
-      ...options,
-    });
+export async function apiFetch(path, options = {}) {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+    credentials: "include",
+    ...options,
+  });
 
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(text || "API request failed");
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("API ERROR:", error);
-    throw error;
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "API request failed");
   }
-};
+
+  return res.json();
+}

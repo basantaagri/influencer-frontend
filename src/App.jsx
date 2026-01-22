@@ -6,7 +6,9 @@ import Profile from "./pages/Profile";
 import Orders from "./pages/Orders";
 import InfluencerDashboard from "./pages/InfluencerDashboard";
 import Login from "./pages/Login";
-import InfluencerRegister from "./pages/InfluencerRegister"; // ✅ ADDED
+import Signup from "./pages/Signup";
+import InfluencerRegister from "./pages/InfluencerRegister";
+import Compare from "./pages/Compare";
 
 import Navbar from "./components/Navbar";
 import RequireRole from "./components/RequireRole";
@@ -20,11 +22,16 @@ function App() {
         {/* ================= PUBLIC ================= */}
         <Route path="/" element={<Discover />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
         <Route path="/profile/:id" element={<Profile />} />
+
         <Route
           path="/influencer-register"
           element={<InfluencerRegister />}
         />
+
+        {/* ================= COMPARE ================= */}
+        <Route path="/compare" element={<Compare />} />
 
         {/* ================= BRAND ================= */}
         <Route path="/saved" element={<Saved />} />

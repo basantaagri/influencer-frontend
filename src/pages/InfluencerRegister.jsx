@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiFetch } from "../api/client";
 
 export default function InfluencerRegister() {
   const navigate = useNavigate();
@@ -24,21 +25,14 @@ export default function InfluencerRegister() {
     setLoading(true);
 
     try {
-      // 1️⃣ Register influencer account
-      const res = await fetch("http://127.0.0.1:8000/auth/register", {
+      await apiFetch("/auth/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: form.email,
           password: form.password,
-          role: "influencer", // 🔒 locked
+          role: "influencer", // locked
         }),
       });
-
-      if (!res.ok) throw new Error("Registration failed");
-
-      // 2️⃣ (Future) You will attach profile_url → audit queue
-      // For now, we redirect safely
 
       navigate("/login");
     } catch (err) {
@@ -72,11 +66,7 @@ export default function InfluencerRegister() {
           onChange={handleChange}
         />
 
-        <select
-          name="platform"
-          required
-          onChange={handleChange}
-        >
+        <select name="platform" required onChange={handleChange}>
           <option value="">Select Platform</option>
           <option value="instagram">Instagram</option>
           <option value="youtube">YouTube</option>
