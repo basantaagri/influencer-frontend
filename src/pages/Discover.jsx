@@ -5,7 +5,7 @@ import InfluencerCard from "../components/InfluencerCard";
 import Filters from "../components/Filters";
 
 // --------------------------------------------------
-// NORMALIZATION MAPS (FRONTEND ONLY)
+// NORMALIZATION MAPS
 // --------------------------------------------------
 const NICHE_MAP = {
   Tech: "Technology",
@@ -25,7 +25,7 @@ const PLATFORM_MAP = {
 };
 
 // --------------------------------------------------
-// ⭐ RECOMMENDED SCORE (SAFE MODE)
+// ⭐ RECOMMENDED SCORE
 // --------------------------------------------------
 function recommendedScore(inf) {
   let score = 10;
@@ -71,7 +71,7 @@ function Discover() {
   const [sortBy, setSortBy] = useState("recommended");
 
   // --------------------------------------------------
-  // COMPARE (PERSISTED — FINAL)
+  // COMPARE (PERSISTED)
   // --------------------------------------------------
   const [compareList, setCompareList] = useState(() => {
     try {
@@ -82,98 +82,74 @@ function Discover() {
   });
 
   useEffect(() => {
-    localStorage.setItem(
-      "compare_items",
-      JSON.stringify(compareList)
-    );
+    localStorage.setItem("compare_items", JSON.stringify(compareList));
   }, [compareList]);
 
   const toggleCompare = (influencer) => {
     setCompareList((prev) => {
       const exists = prev.find((i) => i.id === influencer.id);
-      if (exists) {
-        return prev.filter((i) => i.id !== influencer.id);
-      }
-
+      if (exists) return prev.filter((i) => i.id !== influencer.id);
       if (prev.length >= 3) {
         alert("You can compare maximum 3 influencers");
         return prev;
       }
-
       return [...prev, influencer];
     });
   };
 
   // --------------------------------------------------
-  // FETCH INFLUENCERS (SAFE)
+  // 🔥 FIXED FETCH (OBJECT-BASED)
   // --------------------------------------------------
   useEffect(() => {
     setLoading(true);
 
-    fetchInfluencers(page, PER_PAGE)
+    fetchInfluencers({
+      page,
+      per_page: PER_PAGE,
+    })
       .then((data) => {
-        // ✅ GUARANTEED ARRAY
         setInfluencers(Array.isArray(data) ? data : []);
       })
       .catch((err) => {
         console.error("Fetch influencers failed:", err);
         setInfluencers([]);
       })
-      .finally(() => {
-        setLoading(false);
-      });
+      .finally(() => setLoading(false));
   }, [page]);
 
   // --------------------------------------------------
-  // NORMALIZE DATA (DEFENSIVE)
+  // NORMALIZE
   // --------------------------------------------------
-  const normalized = Array.isArray(influencers)
-    ? influencers.map((inf) => ({
-        ...inf,
-        platform_normalized:
-          PLATFORM_MAP[inf.platform] || inf.platform,
-        niche_normalized:
-          NICHE_MAP[inf.niche] || inf.niche,
-        engagement_rate:
-          inf.engagement_rate ??
-          Math.round((inf.audit_score ?? 0) / 20),
-        price:
-          inf.price ??
-          inf.price_per_post ??
-          0,
-      }))
-    : [];
+  const normalized = influencers.map((inf) => ({
+    ...inf,
+    platform_normalized: PLATFORM_MAP[inf.platform] || inf.platform,
+    niche_normalized: NICHE_MAP[inf.niche] || inf.niche,
+    engagement_rate:
+      inf.engagement_rate ?? Math.round((inf.audit_score ?? 0) / 20),
+    price: inf.price ?? inf.price_per_post ?? 0,
+  }));
 
   // --------------------------------------------------
-  // APPLY FILTERS
+  // FILTERS
   // --------------------------------------------------
   let filtered = [...normalized];
 
-  if (platform !== "All") {
-    filtered = filtered.filter(
-      (i) => i.platform_normalized === platform
-    );
-  }
+  if (platform !== "All")
+    filtered = filtered.filter((i) => i.platform_normalized === platform);
 
-  if (niche !== "All") {
-    filtered = filtered.filter(
-      (i) => i.niche_normalized === niche
-    );
-  }
+  if (niche !== "All")
+    filtered = filtered.filter((i) => i.niche_normalized === niche);
 
-  if (engagement !== "All") {
+  if (engagement !== "All")
     filtered = filtered.filter(
       (i) => (i.engagement_rate ?? 0) >= Number(engagement)
     );
-  }
 
   if (price !== "All") {
     filtered = filtered.filter((i) => {
       if (price === "10000") return i.price < 10000;
-      if (price === "25000")
-        return i.price >= 10000 && i.price <= 25000;
-      if (price === "50000")
-        return i.price > 25000 && i.price <= 50000;
+      if (price === "25000") return i.price >= 10000 && i.price <= 25000;
+      if (price === "50000") return i.price > 25000 && i.price <= 50000;
       if (price === "50001") return i.price > 50000;
       return true;
     });
@@ -182,56 +158,29 @@ function Discover() {
   // --------------------------------------------------
   // SORTING
   // --------------------------------------------------
-  if (sortBy === "recommended") {
-    filtered.sort(
-      (a, b) => recommendedScore(b) - recommendedScore(a)
-    );
-  }
+  if (sortBy === "recommended")
+    filtered.sort((a, b) => recommendedScore(b) - recommendedScore(a));
 
-  if (sortBy === "engagement_desc") {
-    filtered.sort(
-      (a, b) =>
-        (b.engagement_rate ?? 0) -
-        (a.engagement_rate ?? 0)
-    );
-  }
+  if (sortBy === "engagement_desc")
+    filtered.sort((a, b) => b.engagement_rate - a.engagement_rate);
 
-  if (sortBy === "price_asc") {
+  if (sortBy === "price_asc")
     filtered.sort((a, b) => a.price - b.price);
-  }
 
-  if (sortBy === "followers_desc") {
-    filtered.sort(
-      (a, b) =>
-        (b.followers ?? 0) - (a.followers ?? 0)
-    );
-  }
+  if (sortBy === "followers_desc")
+    filtered.sort((a, b) => b.followers - a.followers);
 
   // --------------------------------------------------
-  // RENDER (GUARANTEED SAFE)
+  // RENDER
   // --------------------------------------------------
   return (
-    <div
-      style={{
-        maxWidth: 1100,
-        margin: "0 auto",
-        padding: "60px 20px",
-      }}
-    >
+    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "60px 20px" }}>
       <h1>Influencer Discovery</h1>
       <p style={{ fontSize: 18, marginBottom: 32 }}>
         Brand protection + decision intelligence
       </p>
 
-      {/* FILTERS */}
-      <div
-        style={{
-          padding: 20,
-          borderRadius: 16,
-          background: "#fafafa",
-          marginBottom: 30,
-        }}
-      >
+      <div style={{ padding: 20, borderRadius: 16, background: "#fafafa" }}>
         <Filters
           platform={platform}
           setPlatform={setPlatform}
@@ -249,42 +198,23 @@ function Discover() {
       </div>
 
       {loading && <p>Loading influencers…</p>}
-
-      {!loading && filtered.length === 0 && (
-        <p>No influencers found.</p>
-      )}
+      {!loading && filtered.length === 0 && <p>No influencers found.</p>}
 
       {!loading &&
-        filtered.length > 0 &&
         filtered.map((inf) => (
           <InfluencerCard
             key={inf.id}
             influencer={inf}
-            selected={compareList.some(
-              (i) => i.id === inf.id
-            )}
+            selected={compareList.some((i) => i.id === inf.id)}
             toggleCompare={toggleCompare}
           />
         ))}
 
-      {/* PAGINATION */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          gap: 12,
-          marginTop: 30,
-        }}
-      >
-        <button
-          disabled={page === 1}
-          onClick={() => setPage((p) => p - 1)}
-        >
+      <div style={{ display: "flex", justifyContent: "center", gap: 12 }}>
+        <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
           ← Prev
         </button>
-
-        <span style={{ paddingTop: 6 }}>Page {page}</span>
-
+        <span>Page {page}</span>
         <button
           disabled={influencers.length < PER_PAGE}
           onClick={() => setPage((p) => p + 1)}
@@ -293,7 +223,6 @@ function Discover() {
         </button>
       </div>
 
-      {/* COMPARE BAR */}
       {compareList.length > 0 && (
         <div
           style={{
@@ -307,23 +236,10 @@ function Discover() {
             borderRadius: 14,
             display: "flex",
             gap: 14,
-            alignItems: "center",
-            zIndex: 999,
           }}
         >
           <span>{compareList.length} selected</span>
-
-          <button
-            onClick={() => navigate("/compare")}
-            style={{
-              padding: "6px 14px",
-              borderRadius: 8,
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
-            Compare
-          </button>
+          <button onClick={() => navigate("/compare")}>Compare</button>
         </div>
       )}
     </div>
