@@ -98,7 +98,7 @@ function Discover() {
   };
 
   // --------------------------------------------------
-  // 🔥 FIXED FETCH (OBJECT-BASED)
+  // FETCH INFLUENCERS (OBJECT-BASED)
   // --------------------------------------------------
   useEffect(() => {
     setLoading(true);
@@ -171,7 +171,7 @@ function Discover() {
     filtered.sort((a, b) => b.followers - a.followers);
 
   // --------------------------------------------------
-  // RENDER
+  // ✅ RENDER — FINAL SAFE VERSION
   // --------------------------------------------------
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "60px 20px" }}>
@@ -180,7 +180,14 @@ function Discover() {
         Brand protection + decision intelligence
       </p>
 
-      <div style={{ padding: 20, borderRadius: 16, background: "#fafafa" }}>
+      <div
+        style={{
+          padding: 20,
+          borderRadius: 16,
+          background: "#fafafa",
+          marginBottom: 30,
+        }}
+      >
         <Filters
           platform={platform}
           setPlatform={setPlatform}
@@ -198,19 +205,32 @@ function Discover() {
       </div>
 
       {loading && <p>Loading influencers…</p>}
-      {!loading && filtered.length === 0 && <p>No influencers found.</p>}
 
-      {!loading &&
-        filtered.map((inf) => (
-          <InfluencerCard
-            key={inf.id}
-            influencer={inf}
-            selected={compareList.some((i) => i.id === inf.id)}
-            toggleCompare={toggleCompare}
-          />
-        ))}
+      {!loading && filtered.length === 0 && (
+        <p>No influencers found.</p>
+      )}
 
-      <div style={{ display: "flex", justifyContent: "center", gap: 12 }}>
+      {!loading && filtered.length > 0 && (
+        <>
+          {filtered.map((inf) => (
+            <InfluencerCard
+              key={inf.id}
+              influencer={inf}
+              selected={compareList.some((i) => i.id === inf.id)}
+              toggleCompare={toggleCompare}
+            />
+          ))}
+        </>
+      )}
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          gap: 12,
+          marginTop: 30,
+        }}
+      >
         <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
           ← Prev
         </button>
@@ -236,6 +256,7 @@ function Discover() {
             borderRadius: 14,
             display: "flex",
             gap: 14,
+            zIndex: 999,
           }}
         >
           <span>{compareList.length} selected</span>
