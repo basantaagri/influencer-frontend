@@ -1,12 +1,10 @@
 // frontend/src/api/client.js
-// API client – v1.0-beta (LOCKED, COMPATIBLE)
+// API client — FINAL (LOCAL + PROD SAFE)
 
-// ✅ PRODUCTION BACKEND (Render)
-const API_BASE = "https://influencer-backend.onrender.com";
+const API_BASE =
+  import.meta.env.VITE_API_BASE ||
+  "http://127.0.0.1:8000";
 
-/**
- * Core fetch wrapper (USED ACROSS APP)
- */
 export const apiFetch = async (endpoint, options = {}) => {
   try {
     const response = await fetch(`${API_BASE}${endpoint}`, {
@@ -18,8 +16,8 @@ export const apiFetch = async (endpoint, options = {}) => {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || "API request failed");
+      const text = await response.text();
+      throw new Error(text || "API request failed");
     }
 
     return await response.json();
@@ -27,29 +25,4 @@ export const apiFetch = async (endpoint, options = {}) => {
     console.error("API ERROR:", error);
     throw error;
   }
-};
-
-/**
- * Influencers
- */
-export const fetchInfluencers = () => {
-  return apiFetch("/influencers");
-};
-
-export const fetchInfluencerById = (id) => {
-  return apiFetch(`/influencers/${id}`);
-};
-
-/**
- * Collaborations
- */
-export const requestCollaboration = (payload) => {
-  return apiFetch("/collaborations", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-};
-
-export const fetchCollaborations = () => {
-  return apiFetch("/collaborations");
 };

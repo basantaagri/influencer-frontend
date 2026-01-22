@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { fetchInfluencers } from "../api/influencers";
-import { fetchAudit } from "../api/audit";
 import InfluencerCard from "../components/InfluencerCard";
 import Filters from "../components/Filters";
 
@@ -25,27 +24,25 @@ const PLATFORM_MAP = {
 };
 
 // --------------------------------------------------
-// ⭐ RECOMMENDED SCORE (DECISION INTELLIGENCE)
+// ⭐ RECOMMENDED SCORE (AUDIT DISABLED — SAFE MODE)
 // --------------------------------------------------
-function recommendedScore(inf, auditLabel) {
+function recommendedScore(inf) {
   let score = 0;
 
-  // 1️⃣ Audit weight (PRIMARY)
-  if (auditLabel === "Good") score += 40;
-  if (auditLabel === "Medium Risk") score += 15;
-  if (auditLabel === "High Risk") score -= 30;
+  // Neutral audit weight (audit temporarily disabled)
+  score += 10;
 
-  // 2️⃣ Engagement rate (0–30)
+  // Engagement rate (0–30)
   const engagement = inf.engagement_rate ?? 0;
   score += Math.min(engagement * 10, 30);
 
-  // 3️⃣ Avg views sanity (0–20)
+  // Avg views sanity (0–20)
   const views = inf.avg_views ?? 0;
   if (views > 10000) score += 20;
   else if (views > 5000) score += 12;
   else if (views > 1000) score += 6;
 
-  // 4️⃣ Price penalty (0 to -10)
+  // Price penalty (0 to -10)
   const price = inf.price ?? 0;
   if (price > 50000) score -= 10;
   else if (price > 25000) score -= 5;
@@ -66,14 +63,9 @@ function Discover() {
   const [platform, setPlatform] = useState("All");
   const [niche, setNiche] = useState("All");
   const [engagement, setEngagement] = useState("All");
-  const [audit, setAudit] = useState("All");
+  const [audit, setAudit] = useState("All"); // kept for UI compatibility
   const [price, setPrice] = useState("All");
   const [sortBy, setSortBy] = useState("recommended");
-
-  // --------------------------------------------------
-  // AUDIT CACHE (ID → LABEL)
-  // --------------------------------------------------
-  const [auditMap, setAuditMap] = useState({});
 
   // --------------------------------------------------
   // FETCH INFLUENCERS
@@ -86,22 +78,6 @@ function Discover() {
       })
       .catch(() => setLoading(false));
   }, []);
-
-  // --------------------------------------------------
-  // FETCH AUDIT LABELS (ASYNC SAFE)
-  // --------------------------------------------------
-  useEffect(() => {
-    influencers.forEach((inf) => {
-      fetchAudit(inf.id)
-        .then((res) => {
-          setAuditMap((prev) => ({
-            ...prev,
-            [inf.id]: res?.label,
-          }));
-        })
-        .catch(() => {});
-    });
-  }, [influencers]);
 
   // --------------------------------------------------
   // NORMALIZE DATA
@@ -144,27 +120,7 @@ function Discover() {
   if (engagement !== "All") {
     filtered = filtered.filter(
       (i) =>
-        (i.engagement_rate ?? 0) >=
-        Number(engagement)
-    );
-  }
-
-  // Audit
-  if (audit === "Good") {
-    filtered = filtered.filter(
-      (i) => auditMap[i.id] === "Good"
-    );
-  }
-
-  if (audit === "Exclude High Risk") {
-    filtered = filtered.filter(
-      (i) => auditMap[i.id] !== "High Risk"
-    );
-  }
-
-  if (audit === "High Risk") {
-    filtered = filtered.filter(
-      (i) => auditMap[i.id] === "High Risk"
+        (i.engagement_rate ?? 0) >= Number(engagement)
     );
   }
 
@@ -185,11 +141,10 @@ function Discover() {
   // SORTING
   // --------------------------------------------------
   if (sortBy === "recommended") {
-    filtered.sort((a, b) => {
-      const aScore = recommendedScore(a, auditMap[a.id]);
-      const bScore = recommendedScore(b, auditMap[b.id]);
-      return bScore - aScore;
-    });
+    filtered.sort(
+      (a, b) =>
+        recommendedScore(b) - recommendedScore(a)
+    );
   }
 
   if (sortBy === "engagement_desc") {
@@ -207,8 +162,7 @@ function Discover() {
   if (sortBy === "followers_desc") {
     filtered.sort(
       (a, b) =>
-        (b.followers ?? 0) -
-        (a.followers ?? 0)
+        (b.followers ?? 0) - (a.followers ?? 0)
     );
   }
 
@@ -228,7 +182,6 @@ function Discover() {
         Brand protection + decision intelligence
       </p>
 
-      {/* FILTERS */}
       <Filters
         platform={platform}
         setPlatform={setPlatform}
@@ -244,13 +197,11 @@ function Discover() {
         setSortBy={setSortBy}
       />
 
-      {/* STATES */}
       {loading && <p>Loading influencers…</p>}
       {!loading && filtered.length === 0 && (
         <p>No influencers found.</p>
       )}
 
-      {/* RESULTS */}
       {!loading &&
         filtered.map((inf) => (
           <InfluencerCard
