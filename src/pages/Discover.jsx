@@ -98,7 +98,7 @@ function Discover() {
   };
 
   // --------------------------------------------------
-  // ✅ FETCH INFLUENCERS (FIXED, SAFE)
+  // FETCH INFLUENCERS (SAFE, ARRAY-ONLY)
   // --------------------------------------------------
   useEffect(() => {
     setLoading(true);
@@ -112,7 +112,7 @@ function Discover() {
   }, [page]);
 
   // --------------------------------------------------
-  // NORMALIZE
+  // NORMALIZE DATA
   // --------------------------------------------------
   const normalized = influencers.map((inf) => ({
     ...inf,
@@ -201,18 +201,36 @@ function Discover() {
       {loading && <p>Loading influencers…</p>}
 
       {!loading && filtered.length === 0 && (
-        <p>No influencers found.</p>
+        <div
+          style={{
+            textAlign: "center",
+            padding: 40,
+            border: "1px dashed #ddd",
+            borderRadius: 12,
+            color: "#666",
+          }}
+        >
+          <p style={{ fontSize: 16, marginBottom: 8 }}>
+            No influencers match your filters
+          </p>
+          <p style={{ fontSize: 14 }}>
+            Try changing niche, platform, or engagement range
+          </p>
+        </div>
       )}
 
-      {!loading &&
-        filtered.map((inf) => (
-          <InfluencerCard
-            key={inf.id}
-            influencer={inf}
-            selected={compareList.some((i) => i.id === inf.id)}
-            toggleCompare={toggleCompare}
-          />
-        ))}
+      {!loading && filtered.length > 0 && (
+        <div style={{ marginTop: 20 }}>
+          {filtered.map((inf) => (
+            <InfluencerCard
+              key={inf.id}
+              influencer={inf}
+              selected={compareList.some((i) => i.id === inf.id)}
+              toggleCompare={toggleCompare}
+            />
+          ))}
+        </div>
+      )}
 
       <div
         style={{
