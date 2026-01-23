@@ -1,5 +1,5 @@
 // frontend/src/api/influencers.js
-// Influencer API — FINAL (PROD SAFE, BACKWARD COMPATIBLE)
+// Influencer API — FINAL (PROD SAFE, BACKWARD COMPATIBLE, SWAGGER ALIGNED)
 
 import { apiFetch } from "./client";
 
@@ -10,7 +10,10 @@ import { apiFetch } from "./client";
  *    fetchInfluencers({ page, per_page })
  *    fetchInfluencers(page, perPage)
  *
- * ✅ Always returns ARRAY
+ * ✅ Backend route:
+ *    GET /influencers/influencers
+ *
+ * ✅ Always returns ARRAY (UI-safe)
  */
 export const fetchInfluencers = async (arg1 = 1, arg2 = 10) => {
   let page = 1;
@@ -28,7 +31,7 @@ export const fetchInfluencers = async (arg1 = 1, arg2 = 10) => {
   }
 
   const res = await apiFetch(
-    `/influencers?page=${page}&per_page=${per_page}`
+    `/influencers/influencers?page=${page}&per_page=${per_page}`
   );
 
   // ✅ HARD SAFETY — frontend ALWAYS gets array
@@ -48,7 +51,9 @@ export const fetchInfluencerById = async (id) => {
     throw new Error("Influencer ID is required");
   }
 
-  return apiFetch(`/influencers/${id}`);
+  // Backend route:
+  // GET /influencers/influencers/{influencer_id}
+  return apiFetch(`/influencers/influencers/${id}`);
 };
 
 // ----------------------------------
@@ -59,6 +64,8 @@ export const revealInfluencer = async (id) => {
     throw new Error("Influencer ID is required");
   }
 
+  // Backend route:
+  // POST /reveal/{influencer_id}
   return apiFetch(`/reveal/${id}`, {
     method: "POST",
   });
