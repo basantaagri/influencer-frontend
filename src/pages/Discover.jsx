@@ -25,7 +25,7 @@ const PLATFORM_MAP = {
 };
 
 // --------------------------------------------------
-// ⭐ RECOMMENDED SCORE
+// ⭐ RECOMMENDED SCORE (UNCHANGED)
 // --------------------------------------------------
 function recommendedScore(inf) {
   let score = 10;
@@ -98,7 +98,7 @@ function Discover() {
   };
 
   // --------------------------------------------------
-  // FETCH INFLUENCERS (SAFE, ARRAY-ONLY)
+  // FETCH INFLUENCERS (SAFE)
   // --------------------------------------------------
   useEffect(() => {
     setLoading(true);
@@ -112,14 +112,15 @@ function Discover() {
   }, [page]);
 
   // --------------------------------------------------
-  // NORMALIZE DATA
+  // ✅ NORMALIZE (FIXED — NO NaN)
   // --------------------------------------------------
   const normalized = influencers.map((inf) => ({
     ...inf,
     platform_normalized: PLATFORM_MAP[inf.platform] || inf.platform,
     niche_normalized: NICHE_MAP[inf.niche] || inf.niche,
-    engagement_rate:
-      inf.engagement_rate ?? Math.round((inf.audit_score ?? 0) / 20),
+    engagement_rate: Number.isFinite(inf.engagement_rate)
+      ? inf.engagement_rate
+      : 0,
     price: inf.price ?? inf.price_per_post ?? 0,
   }));
 
