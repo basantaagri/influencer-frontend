@@ -1,5 +1,5 @@
 // frontend/src/api/influencers.js
-// Influencer API — FINAL (PROD SAFE, BACKWARD COMPATIBLE, SWAGGER ALIGNED)
+// Influencer API — FINAL (PROD SAFE, BACKWARD COMPATIBLE, BACKEND-ALIGNED)
 
 import { apiFetch } from "./client";
 
@@ -11,7 +11,7 @@ import { apiFetch } from "./client";
  *    fetchInfluencers(page, perPage)
  *
  * ✅ Backend route:
- *    GET /influencers/influencers
+ *    GET /influencers
  *
  * ✅ Always returns ARRAY (UI-safe)
  */
@@ -30,8 +30,9 @@ export const fetchInfluencers = async (arg1 = 1, arg2 = 10) => {
     per_page = arg2 ?? 10;
   }
 
+  // ✅ CORRECT ROUTE (FIX)
   const res = await apiFetch(
-    `/influencers/influencers?page=${page}&per_page=${per_page}`
+    `/influencers?page=${page}&per_page=${per_page}`
   );
 
   // ✅ HARD SAFETY — frontend ALWAYS gets array
@@ -51,9 +52,9 @@ export const fetchInfluencerById = async (id) => {
     throw new Error("Influencer ID is required");
   }
 
-  // Backend route:
-  // GET /influencers/influencers/{influencer_id}
-  return apiFetch(`/influencers/influencers/${id}`);
+  // ✅ Backend route:
+  // GET /influencers/{influencer_id}
+  return apiFetch(`/influencers/${id}`);
 };
 
 // ----------------------------------
