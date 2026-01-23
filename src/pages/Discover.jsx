@@ -5,26 +5,6 @@ import InfluencerCard from "../components/InfluencerCard";
 import Filters from "../components/Filters";
 
 // --------------------------------------------------
-// NORMALIZATION MAPS
-// --------------------------------------------------
-const NICHE_MAP = {
-  Tech: "Technology",
-  Technology: "Technology",
-  Fitness: "Fitness",
-  Finance: "Finance",
-  Travel: "Travel",
-  Beauty: "Beauty",
-  Gaming: "Gaming",
-  Education: "Education",
-};
-
-const PLATFORM_MAP = {
-  Instagram: "Instagram",
-  YouTube: "YouTube",
-  TikTok: "TikTok",
-};
-
-// --------------------------------------------------
 // ⭐ RECOMMENDED SCORE (UNCHANGED)
 // --------------------------------------------------
 function recommendedScore(inf) {
@@ -105,6 +85,7 @@ function Discover() {
 
     fetchInfluencers(page, PER_PAGE)
       .then((data) => {
+        console.log("API influencers:", data); // 🧪 TEMP CONFIRM
         setInfluencers(Array.isArray(data) ? data : []);
       })
       .catch(() => setInfluencers([]))
@@ -112,33 +93,23 @@ function Discover() {
   }, [page]);
 
   // --------------------------------------------------
-  // ✅ NORMALIZE (FIXED — NO NaN)
+  // FILTERS (RAW BACKEND VALUES ONLY)
   // --------------------------------------------------
-  const normalized = influencers.map((inf) => ({
-    ...inf,
-    platform_normalized: PLATFORM_MAP[inf.platform] || inf.platform,
-    niche_normalized: NICHE_MAP[inf.niche] || inf.niche,
-    engagement_rate: Number.isFinite(inf.engagement_rate)
-      ? inf.engagement_rate
-      : 0,
-    price: inf.price ?? inf.price_per_post ?? 0,
-  }));
+  let filtered = [...influencers];
 
-  // --------------------------------------------------
-  // FILTERS
-  // --------------------------------------------------
-  let filtered = [...normalized];
+  if (platform !== "All") {
+    filtered = filtered.filter((i) => i.platform === platform);
+  }
 
-  if (platform !== "All")
-    filtered = filtered.filter((i) => i.platform_normalized === platform);
+  if (niche !== "All") {
+    filtered = filtered.filter((i) => i.niche === niche);
+  }
 
-  if (niche !== "All")
-    filtered = filtered.filter((i) => i.niche_normalized === niche);
-
-  if (engagement !== "All")
+  if (engagement !== "All") {
     filtered = filtered.filter(
       (i) => (i.engagement_rate ?? 0) >= Number(engagement)
     );
+  }
 
   if (price !== "All") {
     filtered = filtered.filter((i) => {
