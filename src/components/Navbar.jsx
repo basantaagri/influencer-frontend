@@ -91,7 +91,7 @@ function Navbar() {
             fontSize: 18,
           }}
         >
-          BookMyInfluencers
+          Book Influencer
         </Link>
 
         {/* DISCOVER */}

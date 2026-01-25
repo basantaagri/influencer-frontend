@@ -1,6 +1,27 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+// ----------------------------------
+// ⭐ RECOMMENDED SCORE (LOCAL, SAFE)
+// ----------------------------------
+function recommendedScore(i) {
+  let score = 10;
+
+  const engagement = i.engagement_rate ?? 0;
+  score += Math.min(engagement * 10, 30);
+
+  const views = i.avg_views ?? 0;
+  if (views > 10000) score += 20;
+  else if (views > 5000) score += 12;
+  else if (views > 1000) score += 6;
+
+  const price = i.price ?? 0;
+  if (price > 50000) score -= 10;
+  else if (price > 25000) score -= 5;
+
+  return score;
+}
+
 function Compare() {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
@@ -18,7 +39,7 @@ function Compare() {
       setItems([]);
     }
 
-    // ✅ AUTO-CLEAR WHEN USER LEAVES COMPARE PAGE
+    // ✅ AUTO-CLEAR WHEN USER LEAVES
     return () => {
       localStorage.removeItem("compare_items");
       window.dispatchEvent(new Event("compare:update"));
@@ -65,7 +86,7 @@ function Compare() {
   }
 
   // ----------------------------------
-  // VALUE FOR MONEY (SAFE CALC)
+  // VALUE FOR MONEY (SAFE)
   // ----------------------------------
   const valueForMoney = (i) => {
     const views = i.avg_views ?? 0;
@@ -75,6 +96,16 @@ function Compare() {
   };
 
   const bestValue = Math.max(...items.map(valueForMoney));
+
+  // ----------------------------------
+  // 🥇 BEST OVERALL PICK (NEW)
+  // ----------------------------------
+  const bestOverall =
+    items.length > 0
+      ? [...items].sort(
+          (a, b) => recommendedScore(b) - recommendedScore(a)
+        )[0]
+      : null;
 
   // ----------------------------------
   // RENDER
@@ -122,6 +153,22 @@ function Compare() {
                 }}
               >
                 @{i.username}
+                {bestOverall?.id === i.id && (
+                  <div
+                    style={{
+                      marginTop: 6,
+                      display: "inline-block",
+                      background: "#2ecc71",
+                      color: "#fff",
+                      fontSize: 11,
+                      padding: "4px 10px",
+                      borderRadius: 999,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Best Overall Pick
+                  </div>
+                )}
               </th>
             ))}
           </tr>
@@ -160,7 +207,7 @@ function Compare() {
               </td>
 
               {items.map((i) => {
-                const isBest =
+                const isBestValue =
                   label === "Value for Money (Views / ₹)" &&
                   valueForMoney(i) === bestValue &&
                   bestValue > 0;
@@ -171,8 +218,8 @@ function Compare() {
                     style={{
                       padding: 12,
                       borderBottom: "1px solid #f0f0f0",
-                      background: isBest ? "#e8fff0" : "transparent",
-                      fontWeight: isBest ? 600 : 400,
+                      background: isBestValue ? "#e8fff0" : "transparent",
+                      fontWeight: isBestValue ? 600 : 400,
                     }}
                   >
                     {fn(i) || "—"}

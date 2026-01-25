@@ -15,7 +15,7 @@ function Profile() {
   const [ordered, setOrdered] = useState(false);
 
   // -----------------------------
-  // Fetch influencer (by ID)
+  // Fetch influencer
   // -----------------------------
   useEffect(() => {
     let mounted = true;
@@ -59,17 +59,11 @@ function Profile() {
     setOrdered(existing);
   }, [influencer]);
 
-  // -----------------------------
-  // Request collaboration
-  // -----------------------------
   function handleRequest() {
     createOrder(influencer);
     setOrdered(true);
   }
 
-  // -----------------------------
-  // Loading / Error states
-  // -----------------------------
   if (loading) {
     return (
       <div style={{ padding: 80, textAlign: "center" }}>
@@ -87,20 +81,14 @@ function Profile() {
   }
 
   return (
-    <div
-      style={{
-        maxWidth: 1100,
-        margin: "0 auto",
-        padding: "80px 20px",
-      }}
-    >
+    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 20px" }}>
       {/* ================= HERO ================= */}
-      <section style={{ marginBottom: 60 }}>
+      <section style={{ marginBottom: 40 }}>
         <h1
           style={{
             fontSize: 42,
             fontWeight: 600,
-            marginBottom: 14,
+            marginBottom: 10,
             display: "flex",
             alignItems: "center",
             gap: 14,
@@ -110,10 +98,7 @@ function Profile() {
           {influencer.name}
 
           {audit?.label && (
-            <AuditBadge
-              label={audit.label}
-              score={audit.score}
-            />
+            <AuditBadge label={audit.label} score={audit.score} />
           )}
 
           {audit?.label && (
@@ -128,6 +113,54 @@ function Profile() {
           {influencer.platform} • {influencer.niche}
           {influencer.location && ` • ${influencer.location}`}
         </p>
+
+        {/* 🔥 SIGNAL SUMMARY STRIP */}
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            flexWrap: "wrap",
+            marginTop: 12,
+            background: "#f7f7f7",
+            padding: "12px 14px",
+            borderRadius: 14,
+          }}
+        >
+          <Pill icon="🛡️" label="Audit Signal" value={audit?.label || "—"} />
+          <Pill icon="📊" label="Confidence" value="Medium" />
+          <Pill
+            icon="⚡"
+            label="Engagement"
+            value={`${influencer.engagement_rate ?? 0}%`}
+          />
+          <Pill icon="📺" label="Platform" value={influencer.platform} />
+        </div>
+
+        {(influencer.last_updated || influencer.metrics_date) && (
+          <p style={{ fontSize: 12, color: "#777", marginTop: 8 }}>
+            Data last updated:{" "}
+            {new Date(
+              influencer.last_updated || influencer.metrics_date
+            ).toLocaleDateString()}
+          </p>
+        )}
+      </section>
+
+      {/* ================= AT A GLANCE ================= */}
+      <section
+        style={{
+          background: "#f7f7f7",
+          padding: 20,
+          borderRadius: 16,
+          marginBottom: 50,
+        }}
+      >
+        <strong>At a glance</strong>
+        <ul style={{ marginTop: 8, paddingLeft: 18, fontSize: 14 }}>
+          <li>🎯 Best for: Brand awareness</li>
+          <li>⚠️ Risk level: {audit?.label || "—"}</li>
+          <li>🚀 Platform strength: Shorts</li>
+        </ul>
       </section>
 
       {/* ================= STATS ================= */}
@@ -140,14 +173,55 @@ function Profile() {
           marginBottom: 50,
         }}
       >
-        <Stat label="Followers" value={influencer.followers} />
-        <Stat label="Avg Views" value={influencer.avg_views ?? "—"} />
+        <Stat label="👥 Followers" value={influencer.followers} />
+        <Stat label="👁 Avg Views" value={influencer.avg_views ?? "—"} />
+
+        {/* ✅ ENGAGEMENT BAR (REPLACED STAT) */}
+        <div
+          style={{
+            background: "#fff",
+            border: "1px solid #e5e5ea",
+            borderRadius: 20,
+            padding: 28,
+          }}
+        >
+          <p style={{ fontSize: 14, color: "#6e6e73" }}>
+            📊 Engagement Rate
+          </p>
+
+          <div
+            style={{
+              background: "#e5e5ea",
+              height: 10,
+              borderRadius: 999,
+              overflow: "hidden",
+              marginTop: 10,
+            }}
+          >
+            <div
+              style={{
+                width: `${Math.min(
+                  (influencer.engagement_rate ?? 0) * 10,
+                  100
+                )}%`,
+                background:
+                  (influencer.engagement_rate ?? 0) >= 4
+                    ? "#2ecc71"
+                    : (influencer.engagement_rate ?? 0) >= 2
+                    ? "#f1c40f"
+                    : "#e74c3c",
+                height: "100%",
+              }}
+            />
+          </div>
+
+          <p style={{ marginTop: 8, fontSize: 14 }}>
+            {influencer.engagement_rate ?? 0}%
+          </p>
+        </div>
+
         <Stat
-          label="Engagement Rate"
-          value={`${influencer.engagement_rate ?? 0}%`}
-        />
-        <Stat
-          label="Price per Post"
+          label="💰 Price per Post"
           value={`₹${influencer.price ?? influencer.price_per_post ?? 0}`}
         />
       </section>
@@ -173,47 +247,54 @@ function Profile() {
         {ordered && (
           <div style={{ marginTop: 16 }}>
             <strong>Status:</strong>{" "}
-            <span style={{ color: "#f39c12" }}>
-              Pending
-            </span>
+            <span style={{ color: "#f39c12" }}>Pending</span>
           </div>
         )}
       </section>
 
       {/* ================= AUDIT ================= */}
-      {audit?.score != null && (
+      {audit?.label && (
         <section
           style={{
-            background: "#f5f5f7",
+            background: "#fafafa",
             borderRadius: 24,
             padding: 40,
           }}
         >
           <h3 style={{ marginBottom: 12 }}>
-            Audit Summary
+            Audit Signal Summary
           </h3>
 
           <p style={{ fontSize: 16, color: "#555" }}>
-            Audit Label:{" "}
-            <strong>{audit.label ?? "—"}</strong>
+            Audit Signal: <strong>{audit.label}</strong>
           </p>
 
-          <p style={{ fontSize: 16, color: "#555" }}>
-            Audit Score:{" "}
-            <strong>{audit.score}/100</strong>
+          <p style={{ marginTop: 16, fontSize: 14, color: "#777" }}>
+            Audit signals are derived from publicly visible
+            engagement patterns only. They are indicators,
+            not verdicts.
           </p>
 
-          <p
+          {/* DATA COVERAGE */}
+          <div
             style={{
-              marginTop: 18,
-              fontSize: 14,
-              color: "#777",
+              marginTop: 20,
+              paddingTop: 12,
+              borderTop: "1px solid #ddd",
+              fontSize: 13,
             }}
           >
-            Audit and trust scores are calculated using
-            engagement patterns and quality signals.
-            Always review before collaboration.
-          </p>
+            <strong>Data Coverage</strong>
+            <ul style={{ paddingLeft: 18, marginTop: 6 }}>
+              <li>✔ Followers</li>
+              <li>✔ Engagement Rate</li>
+              <li>✖ Audience Demographics</li>
+              <li>✖ Private Analytics</li>
+            </ul>
+            <p style={{ fontSize: 12, color: "#777", marginTop: 6 }}>
+              Missing data is not inferred or estimated.
+            </p>
+          </div>
         </section>
       )}
     </div>
@@ -230,9 +311,7 @@ function Stat({ label, value }) {
         padding: 28,
       }}
     >
-      <p style={{ fontSize: 14, color: "#6e6e73" }}>
-        {label}
-      </p>
+      <p style={{ fontSize: 14, color: "#6e6e73" }}>{label}</p>
       <p
         style={{
           fontSize: 26,
@@ -243,6 +322,27 @@ function Stat({ label, value }) {
       >
         {value ?? "—"}
       </p>
+    </div>
+  );
+}
+
+function Pill({ icon, label, value }) {
+  return (
+    <div
+      style={{
+        background: "#fff",
+        borderRadius: 999,
+        padding: "6px 12px",
+        fontSize: 12,
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        border: "1px solid #e5e5ea",
+      }}
+    >
+      <span>{icon}</span>
+      <strong>{label}:</strong>
+      <span>{value}</span>
     </div>
   );
 }

@@ -37,8 +37,7 @@ function AuditHover({ score, notes }) {
             borderRadius: 10,
             width: 260,
             zIndex: 20,
-            boxShadow:
-              "0 8px 24px rgba(0,0,0,0.25)",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
           }}
         >
           <strong>Why this score?</strong>
@@ -47,7 +46,7 @@ function AuditHover({ score, notes }) {
             style={{
               paddingLeft: 18,
               marginTop: 6,
-              marginBottom: 8,
+              marginBottom: 10,
               fontSize: 13,
             }}
           >
@@ -58,21 +57,48 @@ function AuditHover({ score, notes }) {
 
             {!notes?.length && (
               <li>
-                Based on engagement consistency and
-                follower quality.
+                Based on publicly visible engagement patterns.
               </li>
             )}
           </ul>
 
-          <p
+          {/* 🔒 DATA COVERAGE (ADDED – SAFE) */}
+          <div
             style={{
+              borderTop: "1px solid rgba(255,255,255,0.15)",
+              paddingTop: 8,
+              marginTop: 8,
               fontSize: 12,
-              opacity: 0.8,
-              margin: 0,
+              lineHeight: 1.5,
             }}
           >
-            Login to view full breakdown
-          </p>
+            <strong style={{ fontSize: 12 }}>
+              Data Coverage
+            </strong>
+            <ul
+              style={{
+                paddingLeft: 16,
+                marginTop: 4,
+                marginBottom: 6,
+              }}
+            >
+              <li>✔ Followers: Available</li>
+              <li>✔ Engagement Rate: Available</li>
+              <li>✖ Audience Demographics: Not Available</li>
+              <li>✖ Private Analytics: Not Available</li>
+            </ul>
+
+            <p
+              style={{
+                fontSize: 11,
+                opacity: 0.7,
+                margin: 0,
+              }}
+            >
+              Audit is limited to the data listed above.
+              Missing data is not inferred.
+            </p>
+          </div>
         </div>
       )}
     </div>

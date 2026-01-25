@@ -5,7 +5,7 @@ import InfluencerCard from "../components/InfluencerCard";
 import Filters from "../components/Filters";
 
 // --------------------------------------------------
-// ⭐ RECOMMENDED SCORE (UNCHANGED)
+// ⭐ RECOMMENDED SCORE (SAFE)
 // --------------------------------------------------
 function recommendedScore(inf) {
   let score = 10;
@@ -78,14 +78,14 @@ function Discover() {
   };
 
   // --------------------------------------------------
-  // FETCH INFLUENCERS (SAFE)
+  // FETCH INFLUENCERS (BACKEND SOURCE OF TRUTH)
   // --------------------------------------------------
   useEffect(() => {
     setLoading(true);
 
     fetchInfluencers(page, PER_PAGE)
       .then((data) => {
-        console.log("API influencers:", data); // 🧪 TEMP CONFIRM
+        console.log("API influencers:", data); // 🧪 TEMP DEBUG
         setInfluencers(Array.isArray(data) ? data : []);
       })
       .catch(() => setInfluencers([]))
@@ -93,7 +93,7 @@ function Discover() {
   }, [page]);
 
   // --------------------------------------------------
-  // FILTERS (RAW BACKEND VALUES ONLY)
+  // FILTERS — RAW BACKEND VALUES ONLY
   // --------------------------------------------------
   let filtered = [...influencers];
 
@@ -124,17 +124,21 @@ function Discover() {
   // --------------------------------------------------
   // SORTING
   // --------------------------------------------------
-  if (sortBy === "recommended")
+  if (sortBy === "recommended") {
     filtered.sort((a, b) => recommendedScore(b) - recommendedScore(a));
+  }
 
-  if (sortBy === "engagement_desc")
+  if (sortBy === "engagement_desc") {
     filtered.sort((a, b) => b.engagement_rate - a.engagement_rate);
+  }
 
-  if (sortBy === "price_asc")
+  if (sortBy === "price_asc") {
     filtered.sort((a, b) => a.price - b.price);
+  }
 
-  if (sortBy === "followers_desc")
+  if (sortBy === "followers_desc") {
     filtered.sort((a, b) => b.followers - a.followers);
+  }
 
   // --------------------------------------------------
   // RENDER

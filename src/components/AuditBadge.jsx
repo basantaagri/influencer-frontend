@@ -31,13 +31,17 @@ function AuditBadge({ label, score, notes }) {
           cursor: "help",
           whiteSpace: "nowrap",
         }}
+        title="Audit signal based on publicly visible data"
       >
         {label}
       </span>
 
       {/* OPTIONAL HOVER (SAFE) */}
       {hover && score != null && (
-        <AuditHover score={score} notes={notes} />
+        <AuditHover
+          score={score}   // kept for backward compatibility
+          notes={notes}
+        />
       )}
     </span>
   );

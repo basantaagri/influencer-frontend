@@ -88,7 +88,6 @@ function InfluencerCard({
       ? "#e74c3c"
       : "#999";
 
-  // ✅ SAFE audit summary (text only)
   const auditSummary = getAuditSummary();
 
   return (
@@ -113,6 +112,28 @@ function InfluencerCard({
           : influencer.username.slice(0, 2) + "***"}
       </h3>
 
+      {/* 🔥 SIGNAL SUMMARY STRIP */}
+      <div
+        style={{
+          display: "flex",
+          gap: 10,
+          flexWrap: "wrap",
+          marginTop: 8,
+          background: "#f7f7f7",
+          padding: "10px 12px",
+          borderRadius: 12,
+        }}
+      >
+        <Pill icon="🛡️" label="Audit Signal" value={audit?.label || "—"} />
+        <Pill icon="📊" label="Confidence" value="Medium" />
+        <Pill
+          icon="⚡"
+          label="Engagement"
+          value={`${influencer.engagement_rate ?? 0}%`}
+        />
+        <Pill icon="📺" label="Platform" value={influencer.platform} />
+      </div>
+
       {audit && <AuditBadge label={audit.label} score={audit.score} />}
       {audit && (
         <TrustBadge
@@ -124,18 +145,63 @@ function InfluencerCard({
       {/* METRICS */}
       <div style={{ display: "flex", gap: 40, marginTop: 12 }}>
         <Metric
-          label="Followers"
+          label="👥 Followers"
           value={influencer.followers?.toLocaleString()}
         />
+
+        {/* ✅ ENGAGEMENT BAR (REPLACED METRIC) */}
+        <div style={{ minWidth: 180 }}>
+          <p style={{ fontSize: 12, color: "#777" }}>
+            📊 Engagement Rate
+          </p>
+
+          <div
+            style={{
+              background: "#e5e5ea",
+              height: 8,
+              borderRadius: 999,
+              overflow: "hidden",
+              marginTop: 6,
+            }}
+          >
+            <div
+              style={{
+                width: `${Math.min(
+                  (influencer.engagement_rate ?? 0) * 10,
+                  100
+                )}%`,
+                background:
+                  (influencer.engagement_rate ?? 0) >= 4
+                    ? "#2ecc71"
+                    : (influencer.engagement_rate ?? 0) >= 2
+                    ? "#f1c40f"
+                    : "#e74c3c",
+                height: "100%",
+              }}
+            />
+          </div>
+
+          <div style={{ fontSize: 12, marginTop: 4 }}>
+            {influencer.engagement_rate ?? 0}%
+          </div>
+        </div>
+
         <Metric
-          label="Engagement"
-          value={`${influencer.engagement_rate ?? 0}%`}
-        />
-        <Metric
-          label="Avg Views"
+          label="👁 Avg Views"
           value={influencer.avg_views?.toLocaleString()}
+          tooltip="Average views per video based on recent public uploads."
         />
       </div>
+
+      {/* DATA LAST UPDATED */}
+      {(influencer.last_updated || influencer.metrics_date) && (
+        <div style={{ marginTop: 8, fontSize: 11, color: "#777" }}>
+          Data last updated:{" "}
+          {new Date(
+            influencer.last_updated || influencer.metrics_date
+          ).toLocaleDateString()}
+        </div>
+      )}
 
       {/* DECISION */}
       {revealed && decisionText && (
@@ -144,7 +210,7 @@ function InfluencerCard({
         </p>
       )}
 
-      {/* 🧠 AUDIT EXPLANATION PANEL (SAFE) */}
+      {/* 🧠 AUDIT EXPLANATION PANEL */}
       {revealed && (
         <div
           style={{
@@ -193,11 +259,35 @@ function InfluencerCard({
 // ----------------------------------
 // METRIC (UNCHANGED)
 // ----------------------------------
-function Metric({ label, value }) {
+function Metric({ label, value, tooltip }) {
   return (
-    <div>
+    <div title={tooltip} style={{ cursor: tooltip ? "help" : "default" }}>
       <p style={{ fontSize: 12, color: "#777" }}>{label}</p>
       <p style={{ fontSize: 18, fontWeight: 500 }}>{value ?? "—"}</p>
+    </div>
+  );
+}
+
+// ----------------------------------
+// PILL (UNCHANGED)
+// ----------------------------------
+function Pill({ icon, label, value }) {
+  return (
+    <div
+      style={{
+        background: "#fff",
+        borderRadius: 999,
+        padding: "6px 12px",
+        fontSize: 12,
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        border: "1px solid #e5e5ea",
+      }}
+    >
+      <span>{icon}</span>
+      <strong>{label}:</strong>
+      <span>{value}</span>
     </div>
   );
 }
