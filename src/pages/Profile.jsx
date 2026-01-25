@@ -5,6 +5,7 @@ import { fetchAudit } from "../api/audit";
 import { createOrder, getOrders } from "../utils/orders";
 import AuditBadge from "../components/AuditBadge";
 import TrustBadge from "../components/TrustBadge";
+import ConfidenceTooltip from "../components/ConfidenceTooltip";
 
 function Profile() {
   const { id } = useParams();
@@ -80,6 +81,18 @@ function Profile() {
     );
   }
 
+  // -----------------------------
+  // Confidence styling
+  // -----------------------------
+  const confidenceColor =
+    influencer.confidence_tier === "High"
+      ? "#2ecc71"
+      : influencer.confidence_tier === "Medium"
+      ? "#f39c12"
+      : influencer.confidence_tier === "Low"
+      ? "#e74c3c"
+      : "#999";
+
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 20px" }}>
       {/* ================= HERO ================= */}
@@ -95,7 +108,7 @@ function Profile() {
             flexWrap: "wrap",
           }}
         >
-          {influencer.name}
+          @{influencer.username}
 
           {audit?.label && (
             <AuditBadge label={audit.label} score={audit.score} />
@@ -126,15 +139,40 @@ function Profile() {
             borderRadius: 14,
           }}
         >
-          <Pill icon="🛡️" label="Audit Signal" value={audit?.label || "—"} />
-          <Pill icon="📊" label="Confidence" value="Medium" />
+          <Pill icon="🛡️" label="Audit" value={audit?.label || "—"} />
+
+          <Pill
+            icon="🎯"
+            label="Confidence"
+            value={influencer.confidence_tier || "—"}
+            color={confidenceColor}
+          />
+
+          <Pill
+            icon="📊"
+            label="Score"
+            value={
+              influencer.final_audit_score != null
+                ? influencer.final_audit_score
+                : "—"
+            }
+          />
+
           <Pill
             icon="⚡"
             label="Engagement"
             value={`${influencer.engagement_rate ?? 0}%`}
           />
+
           <Pill icon="📺" label="Platform" value={influencer.platform} />
         </div>
+
+        {/* 🔍 WHY THIS CONFIDENCE */}
+        {influencer.audit_signals && (
+          <div style={{ marginTop: 8 }}>
+            <ConfidenceTooltip signals={influencer.audit_signals} />
+          </div>
+        )}
 
         {(influencer.last_updated || influencer.metrics_date) && (
           <p style={{ fontSize: 12, color: "#777", marginTop: 8 }}>
@@ -159,7 +197,12 @@ function Profile() {
         <ul style={{ marginTop: 8, paddingLeft: 18, fontSize: 14 }}>
           <li>🎯 Best for: Brand awareness</li>
           <li>⚠️ Risk level: {audit?.label || "—"}</li>
-          <li>🚀 Platform strength: Shorts</li>
+          <li>
+            🎯 Confidence tier:{" "}
+            <strong style={{ color: confidenceColor }}>
+              {influencer.confidence_tier || "—"}
+            </strong>
+          </li>
         </ul>
       </section>
 
@@ -167,8 +210,7 @@ function Profile() {
       <section
         style={{
           display: "grid",
-          gridTemplateColumns:
-            "repeat(auto-fit, minmax(220px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
           gap: 32,
           marginBottom: 50,
         }}
@@ -176,7 +218,7 @@ function Profile() {
         <Stat label="👥 Followers" value={influencer.followers} />
         <Stat label="👁 Avg Views" value={influencer.avg_views ?? "—"} />
 
-        {/* ✅ ENGAGEMENT BAR (REPLACED STAT) */}
+        {/* ENGAGEMENT BAR */}
         <div
           style={{
             background: "#fff",
@@ -266,13 +308,13 @@ function Profile() {
           </h3>
 
           <p style={{ fontSize: 16, color: "#555" }}>
-            Audit Signal: <strong>{audit.label}</strong>
+            Final Audit Score:{" "}
+            <strong>{influencer.final_audit_score ?? "—"}</strong>
           </p>
 
           <p style={{ marginTop: 16, fontSize: 14, color: "#777" }}>
-            Audit signals are derived from publicly visible
-            engagement patterns only. They are indicators,
-            not verdicts.
+            Audit signals are derived from publicly visible engagement
+            and reach patterns only. They are indicators, not verdicts.
           </p>
 
           {/* DATA COVERAGE */}
@@ -288,6 +330,7 @@ function Profile() {
             <ul style={{ paddingLeft: 18, marginTop: 6 }}>
               <li>✔ Followers</li>
               <li>✔ Engagement Rate</li>
+              <li>✔ Reach efficiency</li>
               <li>✖ Audience Demographics</li>
               <li>✖ Private Analytics</li>
             </ul>
@@ -326,7 +369,7 @@ function Stat({ label, value }) {
   );
 }
 
-function Pill({ icon, label, value }) {
+function Pill({ icon, label, value, color }) {
   return (
     <div
       style={{
@@ -338,6 +381,7 @@ function Pill({ icon, label, value }) {
         alignItems: "center",
         gap: 6,
         border: "1px solid #e5e5ea",
+        color: color || "#111",
       }}
     >
       <span>{icon}</span>

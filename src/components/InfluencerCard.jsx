@@ -4,16 +4,27 @@ import { fetchAudit } from "../api/audit";
 import { revealInfluencer } from "../api/influencers";
 import AuditBadge from "./AuditBadge";
 import TrustBadge from "./TrustBadge";
+import ConfidenceTooltip from "./ConfidenceTooltip";
 
 // ----------------------------------
 // 🧠 AUDIT EXPLANATION (SAFE / DEFENSIBLE)
 // ----------------------------------
-function getAuditSummary() {
-  return [
-    "Engagement signals appear consistent",
-    "Posting consistency looks stable",
-    "No major anomalies detected in visible growth patterns",
-  ];
+function getAuditSummary(signals = {}) {
+  const points = [];
+
+  if ((signals.engagement ?? 0) >= 2.5)
+    points.push("Engagement signals appear consistent");
+  else points.push("Engagement shows variability");
+
+  if (signals.consistency === "stable")
+    points.push("Posting consistency looks stable");
+  else if (signals.consistency === "uncertain")
+    points.push("Posting patterns may be irregular");
+
+  if ((signals.reach_ratio ?? 0) >= 0.4)
+    points.push("Content reach aligns well with audience size");
+
+  return points;
 }
 
 function InfluencerCard({
@@ -68,27 +79,18 @@ function InfluencerCard({
   };
 
   // ----------------------------------
-  // DECISION TEXT (UNCHANGED)
+  // CONFIDENCE COLOR (SAFE)
   // ----------------------------------
-  const decisionText =
-    audit?.label === "Good"
-      ? "Recommended for brands"
-      : audit?.label === "Medium Risk"
-      ? "Verify before collaboration"
-      : audit?.label === "High Risk"
-      ? "Risky — proceed with caution"
-      : null;
-
-  const decisionColor =
-    audit?.label === "Good"
+  const confidenceColor =
+    influencer.confidence_tier === "High"
       ? "#2ecc71"
-      : audit?.label === "Medium Risk"
+      : influencer.confidence_tier === "Medium"
       ? "#f39c12"
-      : audit?.label === "High Risk"
+      : influencer.confidence_tier === "Low"
       ? "#e74c3c"
       : "#999";
 
-  const auditSummary = getAuditSummary();
+  const auditSummary = getAuditSummary(influencer.audit_signals || {});
 
   return (
     <div
@@ -107,7 +109,8 @@ function InfluencerCard({
     >
       {/* HEADER */}
       <h3 style={{ marginBottom: 6 }}>
-        @{revealed
+        @
+        {revealed
           ? influencer.username
           : influencer.username.slice(0, 2) + "***"}
       </h3>
@@ -124,15 +127,40 @@ function InfluencerCard({
           borderRadius: 12,
         }}
       >
-        <Pill icon="🛡️" label="Audit Signal" value={audit?.label || "—"} />
-        <Pill icon="📊" label="Confidence" value="Medium" />
+        <Pill icon="🛡️" label="Audit" value={audit?.label || "—"} />
+
+        <Pill
+          icon="🎯"
+          label="Confidence"
+          value={influencer.confidence_tier || "—"}
+          color={confidenceColor}
+        />
+
+        <Pill
+          icon="📊"
+          label="Score"
+          value={
+            influencer.final_audit_score != null
+              ? influencer.final_audit_score
+              : "—"
+          }
+        />
+
         <Pill
           icon="⚡"
           label="Engagement"
           value={`${influencer.engagement_rate ?? 0}%`}
         />
+
         <Pill icon="📺" label="Platform" value={influencer.platform} />
       </div>
+
+      {/* 🔍 WHY THIS CONFIDENCE */}
+      {revealed && influencer.audit_signals && (
+        <div style={{ marginTop: 6 }}>
+          <ConfidenceTooltip signals={influencer.audit_signals} />
+        </div>
+      )}
 
       {audit && <AuditBadge label={audit.label} score={audit.score} />}
       {audit && (
@@ -149,11 +177,9 @@ function InfluencerCard({
           value={influencer.followers?.toLocaleString()}
         />
 
-        {/* ✅ ENGAGEMENT BAR (REPLACED METRIC) */}
+        {/* ENGAGEMENT BAR */}
         <div style={{ minWidth: 180 }}>
-          <p style={{ fontSize: 12, color: "#777" }}>
-            📊 Engagement Rate
-          </p>
+          <p style={{ fontSize: 12, color: "#777" }}>📊 Engagement Rate</p>
 
           <div
             style={{
@@ -193,24 +219,7 @@ function InfluencerCard({
         />
       </div>
 
-      {/* DATA LAST UPDATED */}
-      {(influencer.last_updated || influencer.metrics_date) && (
-        <div style={{ marginTop: 8, fontSize: 11, color: "#777" }}>
-          Data last updated:{" "}
-          {new Date(
-            influencer.last_updated || influencer.metrics_date
-          ).toLocaleDateString()}
-        </div>
-      )}
-
-      {/* DECISION */}
-      {revealed && decisionText && (
-        <p style={{ fontSize: 13, color: decisionColor, marginTop: 12 }}>
-          {decisionText}
-        </p>
-      )}
-
-      {/* 🧠 AUDIT EXPLANATION PANEL */}
+      {/* AUDIT EXPLANATION */}
       {revealed && (
         <div
           style={{
@@ -229,7 +238,7 @@ function InfluencerCard({
             ))}
           </ul>
           <div style={{ fontSize: 11, color: "#777", marginTop: 6 }}>
-            ℹ️ Based only on publicly visible YouTube data.
+            ℹ️ Based only on publicly visible platform data.
           </div>
         </div>
       )}
@@ -269,9 +278,9 @@ function Metric({ label, value, tooltip }) {
 }
 
 // ----------------------------------
-// PILL (UNCHANGED)
+// PILL (SAFE EXTENSION)
 // ----------------------------------
-function Pill({ icon, label, value }) {
+function Pill({ icon, label, value, color }) {
   return (
     <div
       style={{
@@ -283,6 +292,7 @@ function Pill({ icon, label, value }) {
         alignItems: "center",
         gap: 6,
         border: "1px solid #e5e5ea",
+        color: color || "#111",
       }}
     >
       <span>{icon}</span>
